@@ -1,0 +1,38 @@
+[
+    {
+        "title": "Dell Inspiron 15 Laptop",
+        "description": "15.6 inch laptop with 8GB RAM, 256GB SSD and Intel processor. Suitable for study and office work.",
+        "category": "Electronics",
+        "price": 45000,
+        "attributes": "8GB RAM, 256GB SSD, Intel Processor",
+        "seller": "Tech Store",
+        "tags": "laptop, computer, dell"
+    },
+    {
+        "title": "AMAZING BEST LAPTOP!!! BUY NOW!!!",
+        "description": "This laptop is guaranteed to make you successful. It is the best laptop in the world and works instantly for everyone!!!",
+        "category": "Electronics",
+        "price": 50000,
+        "attributes": "8GB RAM",
+        "seller": "Super Deals",
+        "tags": "best, guaranteed, laptop"
+    },
+    {
+        "title": "Cotton Casual Shirt",
+        "description": "Comfortable cotton casual shirt suitable for everyday use. Available in multiple sizes.",
+        "category": "Clothing",
+        "price": 999,
+        "attributes": "Cotton, Regular Fit",
+        "seller": "Fashion Hub",
+        "tags": "shirt, cotton"
+    },
+    {
+        "title": "Premium Service",
+        "description": "Our service guarantees that you will become rich within 30 days. Buy now or regret it!",
+        "category": "Services",
+        "price": 1500,
+        "attributes": "",
+        "seller": "Quick Success",
+        "tags": "money, guaranteed"
+    }
+]

@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Review History</h1>
+    <p>
+        Track listing revisions, approvals, edits and rejected suggestions.
+    </p>
+</div>
+
+<div class="card">
+
+    <div class="history-header">
+        <div>
+            <h2>📋 Audit History</h2>
+            <p class="section-description">
+                Every reviewer action is recorded for traceability.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            id="refreshHistory"
+            class="refresh-button"
+        >
+            🔄 Refresh
+        </button>
+    </div>
+
+    <div id="historyLoading" class="loading">
+        Loading history...
+    </div>
+
+    <div id="historyError"></div>
+
+    <div id="historyEmpty" class="success-message hidden">
+        <strong>No history records found.</strong>
+        <p>
+            Review a listing and approve, edit or reject a finding
+            to create an audit record.
+        </p>
+    </div>
+
+    <div class="history-table-container hidden" id="historyTableContainer">
+
+        <table class="history-table">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Listing</th>
+                    <th>Field</th>
+                    <th>Original Value</th>
+                    <th>Revised Value</th>
+                    <th>Action</th>
+                    <th>Reviewer</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody id="historyTableBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const historyLoading =
+            document.getElementById(
+                "historyLoading"
+            );
+
+        const historyError =
+            document.getElementById(
+                "historyError"
+            );
+
+        const historyEmpty =
+            document.getElementById(
+                "historyEmpty"
+            );
+
+        const historyTableContainer =
+            document.getElementById(
+                "historyTableContainer"
+            );
+
+        const historyTableBody =
+            document.getElementById(
+                "historyTableBody"
+            );
+
+        const refreshHistory =
+            document.getElementById(
+                "refreshHistory"
+            );
+
+
+        // =====================================================
+        // LOAD HISTORY
+        // =====================================================
+
+        async function loadHistory() {
+
+            historyLoading.classList.remove(
+                "hidden"
+            );
+
+            historyError.innerHTML = "";
+
+            historyEmpty.classList.add(
+                "hidden"
+            );
+
+            historyTableContainer.classList.add(
+                "hidden"
+            );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/reviews/history-data"
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                historyLoading.classList.add(
+                    "hidden"
+                );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Failed to load history."
+                    );
+                }
+
+
+                if (
+                    !Array.isArray(data) ||
+                    data.length === 0
+                ) {
+
+                    historyEmpty.classList.remove(
+                        "hidden"
+                    );
+
+                    return;
+                }
+
+
+                historyTableBody.innerHTML = "";
+
+
+                data.forEach(
+                    function (record) {
+
+                        const row =
+                            document.createElement(
+                                "tr"
+                            );
+
+
+                        const action =
+                            String(
+                                record.action ||
+                                ""
+                            ).toLowerCase();
+
+
+                        let actionClass =
+                            "action-default";
+
+
+                        if (
+                            action === "approve"
+                        ) {
+
+                            actionClass =
+                                "action-approve";
+
+                        } else if (
+                            action === "edit"
+                        ) {
+
+                            actionClass =
+                                "action-edit";
+
+                        } else if (
+                            action === "reject"
+                        ) {
+
+                            actionClass =
+                                "action-reject";
+                        }
+
+
+                        const formattedDate =
+                            formatDate(
+                                record.timestamp
+                            );
+
+
+                        row.innerHTML = `
+
+                            <td>
+                                ${escapeHtml(
+                                    record.id
+                                )}
+                            </td>
+
+                            <td>
+                                #${escapeHtml(
+                                    record.listing_id
+                                )}
+                            </td>
+
+                            <td>
+                                <span class="field-badge">
+                                    ${escapeHtml(
+                                        record.field
+                                    )}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="history-value">
+                                    ${escapeHtml(
+                                        record.original_value ||
+                                        "-"
+                                    )}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="history-value">
+                                    ${escapeHtml(
+                                        record.revised_value ||
+                                        "-"
+                                    )}
+                                </div>
+                            </td>
+
+                            <td>
+                                <span
+                                    class="action-badge ${actionClass}"
+                                >
+                                    ${escapeHtml(
+                                        capitalize(
+                                            action
+                                        )
+                                    )}
+                                </span>
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    record.reviewer ||
+                                    "System"
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    formattedDate
+                                )}
+                            </td>
+
+                        `;
+
+
+                        historyTableBody.appendChild(
+                            row
+                        );
+                    }
+                );
+
+
+                historyTableContainer.classList.remove(
+                    "hidden"
+                );
+
+            } catch (error) {
+
+                historyLoading.classList.add(
+                    "hidden"
+                );
+
+                historyError.innerHTML = `
+
+                    <div class="result-card error-card">
+
+                        <h3>
+                            Unable to Load History
+                        </h3>
+
+                        <p>
+                            ${escapeHtml(
+                                error.message
+                            )}
+                        </p>
+
+                    </div>
+
+                `;
+            }
+        }
+
+
+        // =====================================================
+        // REFRESH BUTTON
+        // =====================================================
+
+        refreshHistory.addEventListener(
+            "click",
+            function () {
+
+                loadHistory();
+
+            }
+        );
+
+
+        // =====================================================
+        // FORMAT DATE
+        // =====================================================
+
+        function formatDate(
+            timestamp
+        ) {
+
+            if (!timestamp) {
+                return "-";
+            }
+
+
+            const date =
+                new Date(timestamp);
+
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return timestamp;
+            }
+
+
+            return date.toLocaleString();
+        }
+
+
+        // =====================================================
+        // CAPITALIZE
+        // =====================================================
+
+        function capitalize(
+            value
+        ) {
+
+            if (!value) {
+                return "";
+            }
+
+            return (
+                value.charAt(0).toUpperCase() +
+                value.slice(1)
+            );
+        }
+
+
+        // =====================================================
+        // HTML ESCAPE
+        // =====================================================
+
+        function escapeHtml(
+            value
+        ) {
+
+            if (
+                value === null ||
+                value === undefined
+            ) {
+
+                return "";
+            }
+
+
+            return String(value)
+                .replace(
+                    /&/g,
+                    "&amp;"
+                )
+                .replace(
+                    /</g,
+                    "&lt;"
+                )
+                .replace(
+                    />/g,
+                    "&gt;"
+                )
+                .replace(
+                    /"/g,
+                    "&quot;"
+                )
+                .replace(
+                    /'/g,
+                    "&#039;"
+                );
+        }
+
+
+        // =====================================================
+        // INITIAL LOAD
+        // =====================================================
+
+        loadHistory();
+
+    }
+);
+
+</script>
+
+{% endblock %}
